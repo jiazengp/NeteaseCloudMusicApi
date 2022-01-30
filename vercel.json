@@ -10,17 +10,10 @@
     {
       "src": "/(.*)",
       "dest": "/"
-    }
-  ],
-  "headers": [
+    },
     {
-      "source": "/(.*)",
-      "headers": [
-        {
-          "key": "access-control-allow-origin",
-          "value": "music.zengjia.site"
-        }
-      ]
+      "src": "/(.*)",
+      "headers": {"access-control-allow-origin": "music.zengjia.site"}
     }
   ]
 }
