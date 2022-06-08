@@ -257,6 +257,7 @@
 239. 音乐人任务(新)
 240. 内部版本接口
 241. 歌单更新播放量
+242. 黑胶时光机
 
 ## 安装
 
@@ -429,8 +430,7 @@ $ sudo docker run -d -p 3000:3000 netease-music-api
 
 !> 文档可能会有缓存 , 如果文档版本和 github 上的版本不一致,请清除缓存再查看
 
-!> 由于网易限制,此项目在国外服务器或部分国内云服务上使用会受到限制,如 `460 cheating异常`,如需解决 , 可使用大陆服务器或者使用代理 , 感谢 [@hiyangguo](https://github.com/hiyangguo)提出的[解决方法](https://github.com/Binaryify/NeteaseCloudMusicApi/issues/29#issuecomment-298358438):
-在 '/util/request.js' 的 'headers' 处增加 `X-Real-IP':'211.161.244.70' // 任意国内 IP`
+!> 由于网易限制,此项目在国外服务器或部分国内云服务上使用会受到限制,如 `460 cheating异常`,如需解决 , 可使用`realIP`参数,传进国内IP解决,如:`?realIP=116.25.146.177`
 即可解决
 
 !> 图片加上 `?param=宽y高` 可控制图片尺寸，如 `http://p4.music.126.net/JzNK4a5PjjPIXAgVlqEc5Q==/109951164154280311.jpg?param=200y200`, `http://p4.music.126.net/JzNK4a5PjjPIXAgVlqEc5Q==/109951164154280311.jpg?param=50y50`
@@ -523,13 +523,20 @@ v3.30.0 后支持手动传入 cookie,登录接口返回内容新增 `cookie` 字
 
 调用可参考项目文件例子`/public/qrlogin.html` (访问地址:http://localhost:3000/qrlogin.html)
 
+
+#### 3. 游客登录
+说明 : 直接调用此接口, 可获取游客cookie,如果遇到其他接口未登录状态报400状态码需要验证的错误,可使用此接口获取游客cookie避免报错
+
+**接口地址 :** `/register/anonimous`
+
+
 #### 注意
 
 调用登录接口的速度比调用其他接口慢 , 因为登录过程调用了加密算法
 
 ### 刷新登录
 
-说明 : 调用此接口 , 可刷新登录状态
+说明 : 调用此接口 , 可刷新登录状态,返回内容包含新的cookie(不支持刷新二维码登录的cookie)
 
 **调用例子 :** `/login/refresh`
 
@@ -1406,8 +1413,7 @@ tags: 歌单标签
 ### 搜索
 
 说明 : 调用此接口 , 传入搜索关键词可以搜索该音乐 / 专辑 / 歌手 / 歌单 / 用户 ,
-关键词可以多个 , 以空格隔开 , 如 " 周杰伦 搁浅 "( 不需要登录 ), 搜索获取的
-mp3url 不能直接用 , 可通过 `/song/url` 接口传入歌曲 id 获取具体的播放链接
+关键词可以多个 , 以空格隔开 , 如 " 周杰伦 搁浅 "( 不需要登录 ), 可通过 `/song/url` 接口传入歌曲 id 获取具体的播放链接
 
 **必选参数 :** `keywords` : 关键词
 
@@ -1445,8 +1451,7 @@ mp3url 不能直接用 , 可通过 `/song/url` 接口传入歌曲 id 获取具�
 
 ### 搜索建议
 
-说明 : 调用此接口 , 传入搜索关键词可获得搜索建议 , 搜索结果同时包含单曲 , 歌手 ,
-歌单 ,mv 信息
+说明 : 调用此接口 , 传入搜索关键词可获得搜索建议 , 搜索结果同时包含单曲 , 歌手 , 歌单信息
 
 **必选参数 :** `keywords` : 关键词
 
@@ -2206,14 +2211,14 @@ pc: 云盘歌曲信息，如果不存在该字段，则为非云盘歌曲
 
 **必选参数 :** `id`: 歌手 id
 
-**可选参数 :** `limit`: 取出数量 , 默认为 50
+**可选参数 :** `limit`: 取出数量 , 默认为 30
 
-`offset`: 偏移数量 , 用于分页 , 如 :( 页数 -1)\*50, 其中 50 为 limit 的值 , 默认
+`offset`: 偏移数量 , 用于分页 , 如 :( 页数 -1)\*30, 其中 30 为 limit 的值 , 默认
 为 0
 
 **接口地址 :** `/artist/album`
 
-**调用例子 :** `/artist/album?id=6452&limit=30` ( 周杰伦 )
+**调用例子 :** `/artist/album?id=6452&limit=5` ( 周杰伦 )
 
 返回数据如下图 :
 ![获取专辑内容](https://raw.githubusercontent.com/Binaryify/NeteaseCloudMusicApi/master/static/artist_album.png)
@@ -3504,6 +3509,8 @@ type='1009' 获取其 id, 如`/search?keywords= 代码时间 &type=1009`
 
 **可选参数 :** `reason` : 推歌理由
 
+`yunbeiNum`: 云贝数量,默认10
+
 **接口地址 :** `/yunbei/rcmd/song`
 
 **调用例子 :** `/yunbei/rcmd/song?id=65528` `/yunbei/rcmd/song?id=65528&reason=人间好声音推荐给你听`
@@ -3833,6 +3840,18 @@ type='1009' 获取其 id, 如`/search?keywords= 代码时间 &type=1009`
 **接口地址 :** `/inner/version`
 
 **调用例子 :** `/inner/version`
+
+### 黑胶时光机
+
+说明 : 调用此接口 , 可获得黑胶时光机数据
+
+**可选参数 :** `startTime` : 开始时间
+`endTime` : 结束时间
+`limit` : 返回数量 , 默认为 60
+
+**接口地址 :** `/vip/timemachine`
+
+**调用例子 :** `/vip/timemachine` `/vip/timemachine?startTime=1638288000000&endTime=1640966399999&limit=10`（2021年12月） `/vip/timemachine?startTime=1609430400&endTime=1640966399999&limit=60`(2021年)
 
 
 ## 离线访问此文档
